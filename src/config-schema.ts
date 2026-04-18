@@ -101,7 +101,7 @@ export const CONFIG_TABLE_MARKDOWN = renderConfigTable();
 
 export const agentConfigurationDoc = `# Nanoclaw Adapter Configuration
 
-Runs a nanoclaw-managed Claude Code container as a Paperclip employee. Each
+Runs a nanoclaw-managed agent container as a Paperclip employee. Each
 heartbeat is delivered to the nanoclaw daemon over a signed HTTP call and its
 NDJSON output is streamed back into the Paperclip run UI.
 

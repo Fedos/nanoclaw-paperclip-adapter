@@ -1,6 +1,6 @@
 # nanoclaw-paperclip-adapter
 
-Paperclip adapter plugin that lets a [nanoclaw](https://github.com/uniclawassistant/nanoclaw)-managed Claude Code container run as a first-class employee in a Paperclip company.
+Paperclip adapter plugin that lets a [nanoclaw](https://github.com/uniclawassistant/nanoclaw)-managed agent container run as a first-class employee in a Paperclip company.
 
 Each Paperclip heartbeat becomes a signed HTTP call to the nanoclaw daemon. The daemon streams NDJSON back while the wake executes; the plugin forwards those frames into the Paperclip run viewer and, on disconnect, falls back to polling the daemon's status endpoint until the run reaches a terminal state.
 
@@ -27,7 +27,7 @@ curl -s -X POST \
   -H "Content-Type: application/json" \
   -H "Authorization: Bearer $PAPERCLIP_API_KEY" \
   "$PAPERCLIP_API_URL/api/adapters" \
-  -d '{"packageName":"nanoclaw-paperclip-adapter"}'
+  -d '{"packageName":"@fury_ios/nanoclaw-paperclip-adapter"}'
 ```
 
 Paperclip will fetch the latest published version from the public npm registry and load it as `type: "nanoclaw"`.
