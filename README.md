@@ -8,6 +8,16 @@ Each Paperclip heartbeat becomes a signed HTTP call to the nanoclaw daemon. The 
 
 Alpha. Pins `@paperclipai/adapter-utils` 2026.325.x, requires Node ≥ 20.
 
+### `@paperclipai/adapter-utils` placement
+
+This package currently declares `@paperclipai/adapter-utils` as a regular
+`dependency` (not a `peerDependency`). The Paperclip plugin loader installs
+adapter packages into an isolated directory and imports them from there, so a
+bundled copy is the behavior the loader expects today. If the published
+Paperclip SDK later documents a canonical peer-dep convention for adapters,
+we will flip this to `peerDependencies` in a follow-up minor — type shapes
+are stable enough that a downstream dedupe is safe either way.
+
 ## Install
 
 On the Paperclip instance that will host the adapter:
@@ -37,16 +47,18 @@ Create (or update) a Paperclip agent with `adapterType: "nanoclaw"` and an `adap
 }
 ```
 
+<!-- BEGIN:config-table (generated from src/config-schema.ts — do not edit) -->
 | Field            | Required | Default             | Description                                                                                  |
 | ---------------- | -------- | ------------------- | -------------------------------------------------------------------------------------------- |
-| `daemonUrl`      | yes      | —                   | `http(s)://` base URL of the nanoclaw daemon                                                 |
-| `containerId`    | yes      | —                   | Which nanoclaw container/agent key this Paperclip agent maps to                              |
+| `daemonUrl`      | yes      | —                   | `http(s)://` base URL of the nanoclaw daemon |
+| `containerId`    | yes      | —                   | Which nanoclaw container/agent key this Paperclip agent maps to |
 | `hmacSecret`     | one of   | —                   | HMAC shared secret (literal). Strongly prefer `hmacSecretEnv` so the secret is not persisted |
-| `hmacSecretEnv`  | one of   | —                   | Name of the env var on the Paperclip server that holds the HMAC secret                       |
-| `agentKey`       | no       | —                   | Optional alias, forwarded to the daemon as `NANOCLAW_AGENT_KEY`                              |
-| `timeoutSec`     | no       | `1800`              | Hard wake timeout in seconds                                                                 |
-| `graceSec`       | no       | `30`                | Grace period before treating a disconnect as failure                                         |
-| `workspacePath`  | no       | `/workspace/group`  | Container path nanoclaw mounts for this agent's workspace                                    |
+| `hmacSecretEnv`  | one of   | —                   | Name of the env var on the Paperclip server that holds the HMAC secret |
+| `agentKey`       | no       | —                   | Optional alias, forwarded to the daemon as `NANOCLAW_AGENT_KEY` |
+| `timeoutSec`     | no       | `1800`              | Hard wake timeout in seconds |
+| `graceSec`       | no       | `30`                | Grace period before treating a disconnect as failure |
+| `workspacePath`  | no       | `/workspace/group`  | Container path nanoclaw mounts for this agent's workspace |
+<!-- END:config-table -->
 
 You **must** also set the env var referenced by `hmacSecretEnv` on the Paperclip server (so the adapter can sign requests) and on the nanoclaw daemon (so it can verify them).
 
@@ -134,7 +146,9 @@ Tests run entirely against an in-process `node:http` server, so no nanoclaw daem
 
 ## Publishing
 
-The `Publish` GitHub Actions workflow is manual-only (`workflow_dispatch`). It runs the full test + build matrix, then publishes to the public npm registry with provenance. **First publish requires `@Unic sign-off:` on the parent Paperclip issue** — do not dispatch without it.
+The `Publish` GitHub Actions workflow is manual-only (`workflow_dispatch`). The workflow requires a `version` input that **must** exactly match the `version` field in `package.json`; the job fails fast before `npm publish` if they disagree, which prevents accidentally publishing the wrong tag.
+
+It runs the full test + build matrix, then publishes to the public npm registry with provenance. Use `dryRun: "true"` to run the same gate without actually publishing. **First publish requires `@Unic sign-off:` on the parent Paperclip issue** — do not dispatch without it.
 
 ## License
 
