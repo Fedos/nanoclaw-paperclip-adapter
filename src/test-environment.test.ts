@@ -67,4 +67,42 @@ describe("testEnvironment", () => {
       expect(result.checks.some((c) => c.code === "daemon.auth")).toBe(true);
     });
   });
+
+  it("returns fail with daemon.unreachable when the daemon is not listening", async () => {
+    // Bind to a free port then close it, so the address is refused.
+    const server = createServer(() => {});
+    await new Promise<void>((r) => server.listen(0, "127.0.0.1", r));
+    const addr = server.address() as AddressInfo;
+    const url = `http://127.0.0.1:${addr.port}`;
+    await new Promise<void>((r) => server.close(() => r()));
+
+    const result = await testEnvironment({
+      companyId: "co",
+      adapterType: "nanoclaw",
+      config: {
+        daemonUrl: url,
+        containerId: "c",
+        hmacSecret: "s",
+      },
+    });
+    expect(result.status).toBe("fail");
+    expect(result.checks.some((c) => c.code === "daemon.unreachable")).toBe(true);
+  });
+
+  it("warns when daemon returns a non-2xx, non-401 health status", async () => {
+    await withServer(503, "nope", async (url) => {
+      const result = await testEnvironment({
+        companyId: "co",
+        adapterType: "nanoclaw",
+        config: {
+          daemonUrl: url,
+          containerId: "c",
+          hmacSecret: "s",
+        },
+      });
+      expect(result.status).toBe("warn");
+      const health = result.checks.find((c) => c.code === "daemon.health");
+      expect(health?.level).toBe("warn");
+    });
+  });
 });

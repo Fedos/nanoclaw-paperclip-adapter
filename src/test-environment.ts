@@ -7,6 +7,7 @@ import type {
 } from "@paperclipai/adapter-utils";
 import { resolveConfig } from "./config.js";
 import { HMAC_HEADER_SIGNATURE, HMAC_HEADER_TIMESTAMP, signPayload } from "./hmac.js";
+import { USER_AGENT } from "./version.js";
 
 export interface TestEnvironmentDeps {
   request?: typeof request;
@@ -65,7 +66,7 @@ export async function testEnvironment(
     const res = await doRequest(`${config.daemonUrl}/paperclip/health`, {
       method: "GET",
       headers: {
-        "user-agent": "nanoclaw-paperclip-adapter/0.1.0",
+        "user-agent": USER_AGENT,
         [HMAC_HEADER_TIMESTAMP]: timestamp,
         [HMAC_HEADER_SIGNATURE]: signature,
       },

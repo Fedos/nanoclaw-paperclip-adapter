@@ -3,6 +3,7 @@
   "version": "0.1.0",
   "description": "Paperclip adapter plugin for Unic / nanoclaw — runs a nanoclaw-managed Claude Code container as a Paperclip employee.",
   "type": "module",
+  "sideEffects": false,
   "license": "MIT",
   "author": "Fedor",
   "repository": {

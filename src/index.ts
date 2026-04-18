@@ -9,35 +9,13 @@ import { resolveConfig } from "./config.js";
 import { executeWake, WakeError } from "./wake.js";
 import { buildAdapterEnv } from "./env.js";
 import { testEnvironment as runTestEnvironment } from "./test-environment.js";
+import { agentConfigurationDoc } from "./config-schema.js";
 
 export const type = "nanoclaw";
 export const label = "Nanoclaw";
 export const models: AdapterModel[] = [];
 
-export const agentConfigurationDoc = `# Nanoclaw Adapter Configuration
-
-Runs a nanoclaw-managed Claude Code container as a Paperclip employee. Each
-heartbeat is delivered to the nanoclaw daemon over a signed HTTP call and its
-NDJSON output is streamed back into the Paperclip run UI.
-
-## Required fields
-
-| Field | Type | Description |
-|-------|------|-------------|
-| daemonUrl | string | HTTP base URL of the nanoclaw daemon, e.g. \`http://127.0.0.1:18789\` |
-| containerId | string | Nanoclaw container / agent key this Paperclip agent maps to |
-| hmacSecret | string | Shared HMAC secret for request signing. **Prefer \`hmacSecretEnv\`** to reference an env var instead of storing the secret literal |
-
-## Optional fields
-
-| Field | Default | Description |
-|-------|---------|-------------|
-| hmacSecretEnv | — | Name of the env var that holds \`hmacSecret\` (recommended over literal) |
-| agentKey | — | Optional alias forwarded to the daemon as \`NANOCLAW_AGENT_KEY\` |
-| timeoutSec | 1800 | Overall wake timeout in seconds |
-| graceSec | 30 | Grace window before treating a disconnect as a hard failure |
-| workspacePath | /workspace/group | Container path nanoclaw mounts for the agent's workspace |
-`;
+export { agentConfigurationDoc };
 
 export async function execute(
   ctx: AdapterExecutionContext,
@@ -143,4 +121,6 @@ export async function testEnvironment(
 
 export { resolveConfig } from "./config.js";
 export type { NanoclawAdapterConfig } from "./config.js";
-export { WakeError } from "./wake.js";
+export { WakeError, parsePollResult } from "./wake.js";
+export { CONFIG_FIELDS, CONFIG_TABLE_MARKDOWN } from "./config-schema.js";
+export { USER_AGENT, PACKAGE_VERSION } from "./version.js";

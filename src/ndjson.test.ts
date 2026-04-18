@@ -1,5 +1,10 @@
 import { describe, it, expect } from "vitest";
-import { NdjsonSplitter, parseFrame } from "./ndjson.js";
+import {
+  NdjsonBufferOverflowError,
+  NdjsonSplitter,
+  NDJSON_MAX_BUFFER_BYTES,
+  parseFrame,
+} from "./ndjson.js";
 
 describe("NdjsonSplitter", () => {
   it("emits complete lines and buffers partial ones", () => {
@@ -20,6 +25,22 @@ describe("NdjsonSplitter", () => {
     const s = new NdjsonSplitter();
     const bytes = Buffer.from('{"k":"v"}\n', "utf8");
     expect(s.push(bytes)).toEqual(['{"k":"v"}']);
+  });
+
+  it("throws NdjsonBufferOverflowError when a single line exceeds the cap", () => {
+    const s = new NdjsonSplitter({ maxBufferBytes: 64 });
+    const big = "a".repeat(100);
+    expect(() => s.push(big)).toThrowError(NdjsonBufferOverflowError);
+  });
+
+  it("does not throw when cumulative input stays under the cap via newlines", () => {
+    const s = new NdjsonSplitter({ maxBufferBytes: 32 });
+    const chunk = "a".repeat(20) + "\n" + "b".repeat(20) + "\n";
+    expect(() => s.push(chunk)).not.toThrow();
+  });
+
+  it("exposes the default cap as NDJSON_MAX_BUFFER_BYTES", () => {
+    expect(NDJSON_MAX_BUFFER_BYTES).toBe(4 * 1024 * 1024);
   });
 });
 
