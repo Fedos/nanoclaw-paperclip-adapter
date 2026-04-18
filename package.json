@@ -1,11 +1,11 @@
 {
   "name": "nanoclaw-paperclip-adapter",
   "version": "0.1.0",
-  "description": "Paperclip adapter plugin for Unic / nanoclaw — runs a nanoclaw-managed Claude Code container as a Paperclip employee.",
+  "description": "Paperclip adapter plugin for nanoclaw — run a nanoclaw-managed container as a Paperclip employee.",
   "type": "module",
   "sideEffects": false,
   "license": "MIT",
-  "author": "Fedor",
+  "author": "Fedor AB",
   "repository": {
     "type": "git",
     "url": "https://github.com/Fedos/nanoclaw-paperclip-adapter"
@@ -14,7 +14,6 @@
     "paperclip",
     "paperclip-adapter",
     "nanoclaw",
-    "unic",
     "claude-code",
     "ai-agent"
   ],

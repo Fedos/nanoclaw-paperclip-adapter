@@ -39,13 +39,15 @@ Create (or update) a Paperclip agent with `adapterType: "nanoclaw"` and an `adap
 ```json
 {
   "daemonUrl": "http://127.0.0.1:18789",
-  "containerId": "unic-main",
+  "containerId": "my-agent",
   "hmacSecretEnv": "NANOCLAW_HMAC_SECRET",
   "timeoutSec": 1800,
   "graceSec": 30,
   "workspacePath": "/workspace/group"
 }
 ```
+
+> `workspacePath` is the mount path *inside* the nanoclaw-managed container (nanoclaw's own convention), not a path on your host filesystem.
 
 <!-- BEGIN:config-table (generated from src/config-schema.ts — do not edit) -->
 | Field            | Required | Default             | Description                                                                                  |
@@ -75,7 +77,7 @@ Body (JSON):
   "runId": "run-...",
   "taskId": "issue-... | null",
   "agentId": "agent-...",
-  "containerId": "unic-main",
+  "containerId": "my-agent",
   "workspacePath": "/workspace/group",
   "wakePayload": {
     "env": { "PAPERCLIP_AGENT_ID": "...", "PAPERCLIP_API_URL": "...", "PAPERCLIP_RUN_ID": "...", "NANOCLAW_CONTAINER_ID": "...", "NANOCLAW_WORKSPACE_PATH": "..." },
@@ -148,7 +150,7 @@ Tests run entirely against an in-process `node:http` server, so no nanoclaw daem
 
 The `Publish` GitHub Actions workflow is manual-only (`workflow_dispatch`). The workflow requires a `version` input that **must** exactly match the `version` field in `package.json`; the job fails fast before `npm publish` if they disagree, which prevents accidentally publishing the wrong tag.
 
-It runs the full test + build matrix, then publishes to the public npm registry with provenance. Use `dryRun: "true"` to run the same gate without actually publishing. **First publish requires `@Unic sign-off:` on the parent Paperclip issue** — do not dispatch without it.
+It runs the full test + build matrix, then publishes to the public npm registry with provenance. Use `dryRun: "true"` to run the same gate without actually publishing. First publish requires repo-owner sign-off — do not dispatch without it.
 
 ## License
 
