@@ -124,3 +124,4 @@ export type { NanoclawAdapterConfig } from "./config.js";
 export { WakeError, parsePollResult } from "./wake.js";
 export { CONFIG_FIELDS, CONFIG_TABLE_MARKDOWN } from "./config-schema.js";
 export { USER_AGENT, PACKAGE_VERSION } from "./version.js";
+export { createServerAdapter } from "./server/index.js";

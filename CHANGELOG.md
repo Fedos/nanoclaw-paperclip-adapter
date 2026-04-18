@@ -7,6 +7,12 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.1.1] - Unreleased
+
+### Fixed
+
+- Export `createServerAdapter()` factory from the package entry so the Paperclip plugin-loader can mount the adapter. The previous release exposed only the flat `execute`/`testEnvironment`/`type`/... shape, which tripped `plugin-loader.ts` and broke `Install from npm` in the Paperclip UI.
+
 ## [0.1.0] - Unreleased
 
 Initial public release.
