@@ -27,7 +27,7 @@ curl -s -X POST \
   -H "Content-Type: application/json" \
   -H "Authorization: Bearer $PAPERCLIP_API_KEY" \
   "$PAPERCLIP_API_URL/api/adapters" \
-  -d '{"packageName":"nanoclaw-paperclip-adapter"}'
+  -d '{"packageName":"@fury_ios/nanoclaw-paperclip-adapter"}'
 ```
 
 Paperclip will fetch the latest published version from the public npm registry and load it as `type: "nanoclaw"`.
