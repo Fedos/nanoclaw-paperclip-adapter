@@ -7,6 +7,12 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.1.3] - Unreleased
+
+### Added
+
+- Declare `supportsLocalAgentJwt` and `supportsInstructionsBundle` capabilities on the object returned by `createServerAdapter()`. The Paperclip server reads these flags off the loaded module to build `AdapterCapabilities`, and the UI's `AgentConfigForm` gates the entire "Permissions & Configuration" section (where the adapter config fields render) on `isLocal = supportsInstructionsBundle || supportsSkills || supportsLocalAgentJwt`. Without either flag the eight nanoclaw config inputs (`daemonUrl`, `containerId`, `hmacSecret`, `hmacSecretEnv`, `agentKey`, `timeoutSec`, `graceSec`, `workspacePath`) never mounted — even though `getConfigSchema()` returned them.
+
 ## [0.1.2] - Unreleased
 
 ### Added

@@ -12,5 +12,7 @@ export function createServerAdapter(): ServerAdapterModule {
     models: impl.models,
     agentConfigurationDoc: impl.agentConfigurationDoc,
     getConfigSchema: () => buildConfigSchema(),
+    supportsLocalAgentJwt: true,
+    supportsInstructionsBundle: true,
   };
 }

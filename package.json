@@ -1,6 +1,6 @@
 {
   "name": "@fury_ios/nanoclaw-paperclip-adapter",
-  "version": "0.1.2",
+  "version": "0.1.3",
   "description": "Paperclip adapter plugin for nanoclaw — run a nanoclaw-managed container as a Paperclip employee.",
   "type": "module",
   "sideEffects": false,

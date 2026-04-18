@@ -29,4 +29,10 @@ describe("createServerAdapter factory", () => {
     expect(schema.fields.map((f) => f.key)).toContain("daemonUrl");
     expect(schema.fields.map((f) => f.key)).toContain("hmacSecret");
   });
+
+  it("declares supportsLocalAgentJwt + supportsInstructionsBundle so AgentConfigForm treats nanoclaw as a local adapter and mounts the config inputs", () => {
+    const mod = entry.createServerAdapter();
+    expect(mod.supportsLocalAgentJwt).toBe(true);
+    expect(mod.supportsInstructionsBundle).toBe(true);
+  });
 });
