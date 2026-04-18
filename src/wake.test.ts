@@ -172,6 +172,41 @@ describe("executeWake", () => {
     }
   }, 15_000);
 
+  it("aborts the stream when timeoutSec elapses", async () => {
+    const { url, close } = await startServer((_req, res) => {
+      res.statusCode = 200;
+      res.setHeader("content-type", "application/x-ndjson");
+      // Write a partial log line but never terminate — force the deadline.
+      res.write(
+        JSON.stringify({ type: "log", stream: "stdout", chunk: "keep-alive\n" }) +
+          "\n",
+      );
+      // Leave the connection open; do not end().
+    });
+    try {
+      const cfg: NanoclawAdapterConfig = {
+        ...makeConfig(url),
+        timeoutSec: 1,
+        graceSec: 0,
+      };
+      await expect(
+        executeWake(
+          cfg,
+          {
+            runId: "run-timeout",
+            agentId: "a",
+            containerId: "c",
+            workspacePath: "/w",
+            wakePayload: {},
+          },
+          async () => {},
+        ),
+      ).rejects.toMatchObject({ code: "poll_timeout" });
+    } finally {
+      await close();
+    }
+  }, 10_000);
+
   it("wraps network failures in WakeError(daemon_unreachable)", async () => {
     // Bind to a free port, then close so connections are refused.
     const { url, close } = await startServer(() => {});

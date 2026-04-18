@@ -60,15 +60,17 @@ export async function testEnvironment(
   });
 
   const body = "";
+  const { timestamp, signature } = signPayload(config.hmacSecret, body, now);
   try {
     const res = await doRequest(`${config.daemonUrl}/paperclip/health`, {
       method: "GET",
       headers: {
         "user-agent": "nanoclaw-paperclip-adapter/0.1.0",
-        [HMAC_HEADER_TIMESTAMP]: signPayload(config.hmacSecret, body, now).timestamp,
-        [HMAC_HEADER_SIGNATURE]: signPayload(config.hmacSecret, body, now).signature,
+        [HMAC_HEADER_TIMESTAMP]: timestamp,
+        [HMAC_HEADER_SIGNATURE]: signature,
       },
       headersTimeout: 5000,
+      bodyTimeout: 5000,
     });
     if (res.statusCode === 401 || res.statusCode === 403) {
       checks.push({

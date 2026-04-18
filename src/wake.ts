@@ -53,6 +53,22 @@ export class WakeError extends Error {
 
 const POLL_INTERVAL_MS = 2000;
 
+function sleep(ms: number, signal: AbortSignal): Promise<void> {
+  return new Promise<void>((resolve) => {
+    if (signal.aborted) return resolve();
+    const handle = setTimeout(resolve, ms);
+    (handle as NodeJS.Timeout).unref?.();
+    signal.addEventListener(
+      "abort",
+      () => {
+        clearTimeout(handle);
+        resolve();
+      },
+      { once: true },
+    );
+  });
+}
+
 function buildSignedHeaders(
   config: NanoclawAdapterConfig,
   body: string,
@@ -207,67 +223,120 @@ export async function executeWake(
   const controller = new AbortController();
   const overallDeadlineMs = now() + config.timeoutSec * 1000;
 
-  let res: Dispatcher.ResponseData;
-  try {
-    res = await doRequest(`${config.daemonUrl}/paperclip/wake`, {
-      method: "POST",
-      headers: buildSignedHeaders(config, payload, now),
-      body: payload,
-      signal: controller.signal,
-      bodyTimeout: 0,
-      headersTimeout: 30_000,
-    });
-  } catch (err) {
-    throw new WakeError(
-      `nanoclaw daemon unreachable at ${config.daemonUrl}: ${(err as Error).message}`,
-      "daemon_unreachable",
-      { cause: String(err) },
-    );
-  }
+  // Enforce timeoutSec across both the stream and the poll fallback by aborting
+  // the controller when the overall deadline elapses. Without this, a daemon
+  // holding the NDJSON stream open past timeoutSec would run unbounded.
+  let deadlineFired = false;
+  const deadlineTimer = setTimeout(() => {
+    deadlineFired = true;
+    controller.abort();
+  }, Math.max(0, overallDeadlineMs - now()));
+  (deadlineTimer as NodeJS.Timeout).unref?.();
 
-  if (res.statusCode === 401 || res.statusCode === 403) {
-    await res.body.text().catch(() => "");
-    throw new WakeError(
-      `daemon rejected signed wake (status ${res.statusCode}) — check hmacSecret`,
-      "daemon_http_error",
-      { status: res.statusCode },
-    );
-  }
-  if (res.statusCode < 200 || res.statusCode >= 300) {
-    const snippet = await res.body.text().catch(() => "");
-    throw new WakeError(
-      `daemon returned HTTP ${res.statusCode}`,
-      "daemon_http_error",
-      { status: res.statusCode, body: snippet.slice(0, 500) },
-    );
-  }
-
-  const { terminal, streamError } = await streamFrames(res.body, onLog);
-  if (terminal) {
-    return { done: terminal, reconnected: false, pollAttempts: 0 };
-  }
-
-  // Disconnected before terminal frame — fall back to polling.
-  await onLog(
-    "stdout",
-    `[nanoclaw] stream closed without terminal frame${streamError ? ` (${streamError.message})` : ""}; polling status endpoint\n`,
-  );
+  const fail = (err: unknown): never => {
+    if (deadlineFired) {
+      throw new WakeError(
+        `wake exceeded timeoutSec=${config.timeoutSec}s`,
+        "poll_timeout",
+        { cause: String(err) },
+      );
+    }
+    throw err;
+  };
 
   try {
-    const { terminal: polled, attempts } = await pollForResult(
-      config,
-      body.runId,
-      { request: doRequest, now },
-      controller.signal,
-      overallDeadlineMs,
+    let res: Dispatcher.ResponseData;
+    try {
+      res = await doRequest(`${config.daemonUrl}/paperclip/wake`, {
+        method: "POST",
+        headers: buildSignedHeaders(config, payload, now),
+        body: payload,
+        signal: controller.signal,
+        bodyTimeout: 0,
+        headersTimeout: 30_000,
+      });
+    } catch (err) {
+      if (deadlineFired) {
+        throw new WakeError(
+          `wake exceeded timeoutSec=${config.timeoutSec}s before daemon responded`,
+          "poll_timeout",
+          { cause: String(err) },
+        );
+      }
+      throw new WakeError(
+        `nanoclaw daemon unreachable at ${config.daemonUrl}: ${(err as Error).message}`,
+        "daemon_unreachable",
+        { cause: String(err) },
+      );
+    }
+
+    if (res.statusCode === 401 || res.statusCode === 403) {
+      await res.body.text().catch(() => "");
+      throw new WakeError(
+        `daemon rejected signed wake (status ${res.statusCode}) — check hmacSecret`,
+        "daemon_http_error",
+        { status: res.statusCode },
+      );
+    }
+    if (res.statusCode < 200 || res.statusCode >= 300) {
+      const snippet = await res.body.text().catch(() => "");
+      throw new WakeError(
+        `daemon returned HTTP ${res.statusCode}`,
+        "daemon_http_error",
+        { status: res.statusCode, body: snippet.slice(0, 500) },
+      );
+    }
+
+    const { terminal, streamError } = await streamFrames(res.body, onLog);
+    if (deadlineFired) {
+      throw new WakeError(
+        `wake exceeded timeoutSec=${config.timeoutSec}s during stream`,
+        "poll_timeout",
+        { cause: streamError ? String(streamError) : null },
+      );
+    }
+    if (terminal) {
+      return { done: terminal, reconnected: false, pollAttempts: 0 };
+    }
+
+    // Disconnected before terminal frame — grace-sleep (give the daemon a
+    // chance to finalize), then fall back to polling. Both bounded by
+    // overallDeadlineMs via the controller timer.
+    await onLog(
+      "stdout",
+      `[nanoclaw] stream closed without terminal frame${streamError ? ` (${streamError.message})` : ""}; waiting ${config.graceSec}s then polling status endpoint\n`,
     );
-    return { done: polled, reconnected: true, pollAttempts: attempts };
+    if (config.graceSec > 0) {
+      await sleep(config.graceSec * 1000, controller.signal);
+      if (deadlineFired) {
+        throw new WakeError(
+          `wake exceeded timeoutSec=${config.timeoutSec}s during grace window`,
+          "poll_timeout",
+        );
+      }
+    }
+
+    try {
+      const { terminal: polled, attempts } = await pollForResult(
+        config,
+        body.runId,
+        { request: doRequest, now },
+        controller.signal,
+        overallDeadlineMs,
+      );
+      return { done: polled, reconnected: true, pollAttempts: attempts };
+    } catch (err) {
+      if (err instanceof WakeError) throw err;
+      throw new WakeError(
+        `failed to recover daemon result: ${(err as Error).message}`,
+        "daemon_stream_error",
+        { cause: String(err) },
+      );
+    }
   } catch (err) {
     if (err instanceof WakeError) throw err;
-    throw new WakeError(
-      `failed to recover daemon result: ${(err as Error).message}`,
-      "daemon_stream_error",
-      { cause: String(err) },
-    );
+    return fail(err);
+  } finally {
+    clearTimeout(deadlineTimer);
   }
 }

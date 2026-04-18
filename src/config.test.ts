@@ -28,7 +28,7 @@ describe("resolveConfig", () => {
     expect(r.ok).toBe(true);
     if (!r.ok) return;
     expect(r.config.hmacSecret).toBe("super-secret");
-    expect(r.config.hmacSecretEnvVar).toBe("NANOCLAW_SECRET");
+    expect(r.config.hmacSecretEnv).toBe("NANOCLAW_SECRET");
   });
 
   it("reports every missing field", () => {

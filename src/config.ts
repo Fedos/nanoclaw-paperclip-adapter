@@ -3,7 +3,7 @@ export interface NanoclawAdapterConfig {
   containerId: string;
   agentKey?: string;
   hmacSecret: string;
-  hmacSecretEnvVar?: string;
+  hmacSecretEnv?: string;
   timeoutSec: number;
   graceSec: number;
   workspacePath: string;
@@ -45,7 +45,7 @@ function resolveSecret(
   raw: Record<string, unknown>,
   env: NodeJS.ProcessEnv,
 ): { value?: string; envVar?: string; error?: ConfigResolutionError } {
-  const envVar = asString(raw.hmacSecretEnv) ?? asString(raw.hmacSecretEnvVar);
+  const envVar = asString(raw.hmacSecretEnv);
   if (envVar) {
     const fromEnv = env[envVar];
     if (!fromEnv) {
@@ -121,7 +121,7 @@ export function resolveConfig(
       containerId,
       agentKey: asString(obj.agentKey),
       hmacSecret: secret.value,
-      hmacSecretEnvVar: secret.envVar,
+      hmacSecretEnv: secret.envVar,
       timeoutSec: asNumber(obj.timeoutSec) ?? DEFAULT_TIMEOUT_SEC,
       graceSec: asNumber(obj.graceSec) ?? DEFAULT_GRACE_SEC,
       workspacePath: asString(obj.workspacePath) ?? DEFAULT_WORKSPACE_PATH,
