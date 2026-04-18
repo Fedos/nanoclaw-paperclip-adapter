@@ -13,7 +13,6 @@
     "paperclip",
     "paperclip-adapter",
     "nanoclaw",
-    "claude-code",
     "ai-agent"
   ],
   "exports": {
