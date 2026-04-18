@@ -106,7 +106,7 @@ function buildSignedHeaders(
  * {@link NdjsonDoneFrame}. Returns `null` when the run is still in progress
  * (e.g. `status: "running"`) or the body is not valid JSON.
  *
- * Exported so the nanoclaw-side unit tests in FEDA-94 can reuse the exact
+ * Exported so the nanoclaw-side unit tests can reuse the exact
  * adapter-side parser rather than re-implementing it.
  */
 export function parsePollResult(text: string): NdjsonDoneFrame | null {
