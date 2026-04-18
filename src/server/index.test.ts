@@ -19,4 +19,14 @@ describe("createServerAdapter factory", () => {
     expect(typeof mod.agentConfigurationDoc).toBe("string");
     expect(mod.agentConfigurationDoc).toContain("Nanoclaw Adapter Configuration");
   });
+
+  it("exposes getConfigSchema so the Paperclip UI can render the config form", async () => {
+    const mod = entry.createServerAdapter();
+    expect(typeof mod.getConfigSchema).toBe("function");
+    const schema = await mod.getConfigSchema!();
+    expect(Array.isArray(schema.fields)).toBe(true);
+    expect(schema.fields.length).toBeGreaterThan(0);
+    expect(schema.fields.map((f) => f.key)).toContain("daemonUrl");
+    expect(schema.fields.map((f) => f.key)).toContain("hmacSecret");
+  });
 });

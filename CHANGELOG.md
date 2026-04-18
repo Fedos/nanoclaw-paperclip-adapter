@@ -7,6 +7,12 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.1.2] - Unreleased
+
+### Added
+
+- `createServerAdapter()` now exposes the optional `getConfigSchema()` hook, returning an `AdapterConfigSchema` derived from the existing `CONFIG_FIELDS` source of truth. This lets the Paperclip UI render the adapter's config form (labels, hints, required/optional, HMAC group, number inputs for `timeoutSec`/`graceSec`) instead of leaving it empty — which previously caused `Test environment` to fail with `daemonUrl is required` / `containerId is required` / `hmacSecret is required` because the form had no inputs.
+
 ## [0.1.1] - Unreleased
 
 ### Fixed
