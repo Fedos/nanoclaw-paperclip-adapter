@@ -2,7 +2,7 @@
  * HMAC signing contract for nanoclaw daemon calls.
  *
  * This module is a **public contract** — the daemon side (see FEDA-94 and
- * `uniclawassistant/nanoclaw`) MUST implement identical rules or signed
+ * `qwibitai/nanoclaw`) MUST implement identical rules or signed
  * requests will be rejected.
  *
  * Canonical signing string:
