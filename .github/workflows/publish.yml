@@ -44,7 +44,11 @@ jobs:
       - run: npm run build
       - name: npm publish
         if: ${{ github.event.inputs.dryRun != 'true' }}
-        run: npm publish --access public --provenance
+        run: |
+          rm -f "$RUNNER_TEMP/.npmrc"
+          npm publish --access public --provenance
       - name: npm publish (dry run)
         if: ${{ github.event.inputs.dryRun == 'true' }}
-        run: npm publish --dry-run --access public
+        run: |
+          rm -f "$RUNNER_TEMP/.npmrc"
+          npm publish --dry-run --access public
